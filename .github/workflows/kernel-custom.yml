@@ -47,10 +47,10 @@ on:
         type: string
         default: "2022-01"
       revision:
-        description: "修订版本 (如 r11, 仅 5.10 需要)"
+        description: "修订版本 (如 r11)。留空 = 用该月分支/最新发布（推荐）；填写 = 精确 pin 到该月的 _<revision> 发布 tag，不存在会构建失败；lts 下无效"
         required: false
         type: string
-        default: "r11"
+        default: ""
 
       # ==================== KernelSU 配置 ====================
       # KernelSU 变体固定为 BakaSU
@@ -145,6 +145,18 @@ jobs:
               exit 1
               ;;
           esac
+
+      # lts 分支没有 _rN 发布 tag，build.yml 遇到 lts 会直接跳过 revision。
+      # 与其让用户以为 pin 上了、其实被静默忽略，不如在这里提前拦下来。
+      - name: 校验 revision 与安全补丁级别的组合
+        env:
+          REVISION: ${{ inputs.revision }}
+          OS_PATCH_LEVEL: ${{ inputs.os_patch_level }}
+        run: |
+          if [ -n "$REVISION" ] && [ "$OS_PATCH_LEVEL" = "lts" ]; then
+            echo "::error::安全补丁级别为 lts 时「修订版本」不会生效，请清空该项（当前值: $REVISION）"
+            exit 1
+          fi
 
   build-custom-kernel:
     name: "${{ inputs.kernel_version }}.${{ inputs.sub_level }}-${{ inputs.android_version }}-${{ inputs.os_patch_level }}"
