@@ -390,7 +390,8 @@ jobs:
             RELEASE_TAG="${FORMATTED_BRANCH}_${{ inputs.revision }}"
             TAG_REF=$(retry 4 15 git ls-remote --tags --refs https://android.googlesource.com/kernel/common "refs/tags/${RELEASE_TAG}")
             if [ -z "$TAG_REF" ]; then
-              echo "::error::未找到 JSON 指定的发布 tag: $RELEASE_TAG" >&2
+              echo "::error::未找到指定的发布 tag: $RELEASE_TAG" >&2
+              echo "该 revision 来自自定义构建的输入框或矩阵构建的数据文件；如果不是你想要的，请清空自定义构建的「修订版本」。" >&2
               exit 1
             fi
             sed -i "s|revision=\"${FORMATTED_BRANCH}\"|revision=\"refs/tags/${RELEASE_TAG}\"|" "$DEFAULT_MANIFEST_PATH"
