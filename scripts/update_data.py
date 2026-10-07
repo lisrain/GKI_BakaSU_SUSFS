@@ -62,7 +62,17 @@ def update_target(android_ver: str, kernel_ver: str,
                     continue
                 text = fetch_makefile(android_ver, kernel_ver, date, dep_cutoff)
                 if text is None:
-                    raise RuntimeError(f"monthly branch has no Makefile: {android_ver}-{kernel_ver}-{date}")
+                    # AOSP 会在发布日期到来之前就把当月分支的占位 ref 建好：它指向
+                    # kernel/common 的空初始提交，树为空、没有任何文件，所以两个
+                    # 路径的 Makefile 都是 404。这不是上游故障，只是这个月还没发布。
+                    # 反过来说，如果这个月本来就有数据，说明分支此前确实有内容，
+                    # 那才是需要报出来的异常。
+                    if current is not None:
+                        raise RuntimeError(
+                            f"monthly branch has no Makefile: {android_ver}-{kernel_ver}-{date}"
+                        )
+                    print(f"  [{date}] branch not released yet, skip")
+                    continue
             else:
                 text = fetch_tag_makefile(*release)
             ver = parse_version(text)
@@ -167,12 +177,23 @@ def update_target(android_ver: str, kernel_ver: str,
 
 def main():
     any_changed = False
+    failures: list[tuple[str, str, BaseException]] = []
     for (android_ver, kernel_ver), (date_start, date_end, dep_cutoff) in TARGETS.items():
         print(f"\n=== {android_ver} / {kernel_ver} ===")
-        if update_target(android_ver, kernel_ver, date_start, date_end, dep_cutoff):
-            any_changed = True
+        try:
+            if update_target(android_ver, kernel_ver, date_start, date_end, dep_cutoff):
+                any_changed = True
+        except Exception as error:
+            # 每个 (android, kernel) 的数据文件互相独立，一个目标的异常没有理由
+            # 让其它目标已经算好的更新一起丢掉。这里先记下来跑完全部目标，最后
+            # 再统一以非零状态退出。
+            failures.append((android_ver, kernel_ver, error))
+            print(f"  !! {android_ver}/{kernel_ver} failed: {error}", file=sys.stderr)
 
     print(f"\n{'Data updated.' if any_changed else 'All data up-to-date.'}")
+    if failures:
+        detail = "; ".join(f"{a}/{k}: {e}" for a, k, e in failures)
+        raise RuntimeError(f"{len(failures)} target(s) failed: {detail}")
     return any_changed
 
 
