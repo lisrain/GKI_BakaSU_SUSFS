@@ -268,6 +268,83 @@ class ReleaseTagTests(unittest.TestCase):
             }])
             self.assertEqual(data["lts"], "5.15.217")
 
+    def test_unreleased_monthly_branch_is_skipped(self) -> None:
+        """AOSP 会先建好占位分支、稍后才推内容，此时该月应跳过而不是报错。"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "5.10.json"
+            path.write_text(json.dumps({
+                "android_version": "android13",
+                "kernel_version": "5.10",
+                "entries": [
+                    {"date": "2026-07", "kernel": "5.10.257", "revision": "r2"},
+                    {"date": "lts", "kernel": "5.10.260"},
+                ],
+            }), encoding="utf-8")
+            with (
+                patch.object(update_data, "json_path", return_value=str(path)),
+                patch.object(update_data, "fetch_latest_release_tags", return_value={
+                    "2026-07": ("android13-5.10-2026-07_r2", "abc123")
+                }),
+                patch.object(update_data, "fetch_monthly_branches", return_value={"2026-10"}),
+                patch.object(update_data, "fetch_makefile", return_value=None),
+                patch.object(update_data, "fetch_tag_makefile", return_value=makefile(257)),
+                patch.object(update_data, "fetch_lts", return_value=makefile(269)),
+                patch.object(update_data.time, "sleep"),
+            ):
+                update_data.update_target("android13", "5.10", "2026-07", "2026-10", "")
+            data = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual([entry["date"] for entry in data["entries"]], ["2026-07", "lts"])
+
+    def test_monthly_branch_that_lost_its_makefile_still_fails(self) -> None:
+        """已经有数据的月份读不到 Makefile，属于上游异常，必须报错。"""
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "5.10.json"
+            path.write_text(json.dumps({
+                "android_version": "android13",
+                "kernel_version": "5.10",
+                "entries": [
+                    {"date": "2026-07", "kernel": "5.10.257", "revision": "r2"},
+                    {"date": "2026-10", "kernel": "5.10.258"},
+                    {"date": "lts", "kernel": "5.10.260"},
+                ],
+            }), encoding="utf-8")
+            with (
+                patch.object(update_data, "json_path", return_value=str(path)),
+                patch.object(update_data, "fetch_latest_release_tags", return_value={
+                    "2026-07": ("android13-5.10-2026-07_r2", "abc123")
+                }),
+                patch.object(update_data, "fetch_monthly_branches", return_value={"2026-10"}),
+                patch.object(update_data, "fetch_makefile", return_value=None),
+                patch.object(update_data, "fetch_tag_makefile", return_value=makefile(257)),
+                patch.object(update_data, "fetch_lts", return_value=makefile(269)),
+                patch.object(update_data.time, "sleep"),
+            ):
+                with self.assertRaises(RuntimeError):
+                    update_data.update_target("android13", "5.10", "2026-07", "2026-10", "")
+
+    def test_one_failing_target_does_not_drop_the_others(self) -> None:
+        """单个目标出错时其它目标仍要处理完，最后再统一以非零状态收尾。"""
+        processed: list[str] = []
+
+        def fake_update_target(android_ver: str, kernel_ver: str,
+                               date_start: str, date_end: str | None,
+                               dep_cutoff: str) -> bool:
+            processed.append(f"{android_ver}/{kernel_ver}")
+            if (android_ver, kernel_ver) == ("android12", "5.10"):
+                raise RuntimeError("boom")
+            return False
+
+        with (
+            patch.object(update_data, "TARGETS", {
+                ("android12", "5.10"): ("2021-08", None, "2024-08"),
+                ("android13", "5.10"): ("2022-05", None, "2024-09"),
+            }),
+            patch.object(update_data, "update_target", side_effect=fake_update_target),
+        ):
+            with self.assertRaises(RuntimeError):
+                update_data.main()
+        self.assertEqual(processed, ["android12/5.10", "android13/5.10"])
+
 
 if __name__ == "__main__":
     unittest.main()
