@@ -36,15 +36,16 @@ jobs:
       - name: 增量更新并校验数据
         run: python scripts/update_data.py
 
-      - name: 验证全部构建矩阵
+      - name: 校验并提交数据变更
+        # 增量更新即使有目标失败，其它目标的数据也已经写盘了，没理由跟着一起丢掉。
+        # 这里仍然先跑完整校验，校验不过就绝不提交。
+        if: always()
         run: |
           python -c 'import sys; sys.path.insert(0, "scripts"); from gki_fetch import TARGETS; from pathlib import Path; missing = [f"{android}/{kernel}" for android, kernel in TARGETS if not Path(f"data/{android}/{kernel}.json").is_file()]; sys.exit("Missing GKI data: " + ", ".join(missing) if missing else 0)'
           for data_file in data/android*/*.json; do
             python scripts/prepare_matrix.py "$data_file" > /dev/null
           done
 
-      - name: 提交数据变更
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/android*/*.json
