@@ -181,12 +181,12 @@
     {
       "date": "2026-03",
       "kernel": "5.15.197",
-      "revision": "r17"
+      "revision": "r18"
     },
     {
       "date": "2026-06",
       "kernel": "5.15.206",
-      "revision": "r5"
+      "revision": "r6"
     },
     {
       "date": "2026-09",
