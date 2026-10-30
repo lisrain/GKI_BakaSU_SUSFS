@@ -193,8 +193,12 @@
       "revision": "r3"
     },
     {
-      "date": "lts",
+      "date": "2026-10",
       "kernel": "5.10.269"
+    },
+    {
+      "date": "lts",
+      "kernel": "5.10.272"
     }
   ]
 }

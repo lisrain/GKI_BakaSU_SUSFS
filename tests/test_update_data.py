@@ -34,7 +34,7 @@ class ReleaseTagTests(unittest.TestCase):
         )
         matrix = prepare_matrix.build_matrix(validated, deduplicate_sublevels=True)
         self.assertEqual(
-            [item["sub_level"] for item in matrix], ["20", "21", "32", "33"]
+            [item["sub_level"] for item in matrix], ["20", "21", "32", "35"]
         )
 
     def test_latest_revision_is_numeric_and_scoped_to_series(self) -> None:
