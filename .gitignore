@@ -1,5 +1,6 @@
-# Claude Code
+# AI agent tooling
 .claude/
+.workbuddy/
 
 # Development files
 hympfs-dev.diff
