@@ -33,8 +33,19 @@ class ReleaseTagTests(unittest.TestCase):
             data, str(path), "android17", "6.18"
         )
         matrix = prepare_matrix.build_matrix(validated, deduplicate_sublevels=True)
+        # 数据文件由机器人按周更新，因此只锁定结构（每个 sublevel 首次出现即
+        # 去重、LTS 排在末尾），不锁定上游随时会变的具体子版本号。
+        expected: list[tuple[str, str]] = []
+        seen: set[str] = set()
+        for entry in data["entries"]:
+            sublevel = entry["kernel"].rsplit(".", 1)[1]
+            if sublevel not in seen:
+                seen.add(sublevel)
+                expected.append((sublevel, entry["date"]))
+        expected.append((data["lts"].rsplit(".", 1)[1], "lts"))
         self.assertEqual(
-            [item["sub_level"] for item in matrix], ["20", "21", "32", "35"]
+            [(item["sub_level"], item["os_patch_level"]) for item in matrix],
+            expected,
         )
 
     def test_latest_revision_is_numeric_and_scoped_to_series(self) -> None:
