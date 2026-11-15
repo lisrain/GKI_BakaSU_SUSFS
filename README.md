@@ -234,14 +234,15 @@ GitHub 的 **Artifacts 下载下来是一个 ZIP**；只解压这一层，里面
 | `use_zram` | `false` | 增强 ZRAM / LZ4KD 算法 | 想要 ZRAM 增强才开；6.12 通过 `build_target` 构建时会强制关闭；6.18 自动跳过 |
 | `use_bbg` | `false` | BBG 防格机补丁 | 按需开；不是所有设备都需要 |
 | `use_rekernel` | `false` | 实验性 Re-Kernel 驱动 | 一般不用；6.18 自动跳过 |
-| `cve_2026_43499_patch` | `true` | 应用 CVE-2026-43499 修复链 | 建议保持开启；6.18 自动跳过 |
+| `apply_custom_patches` | `false` | 应用 `custom_patches/` 里的自定义补丁 | 按文件名顺序应用，版本范围不匹配的自动跳过；补丁选择与失败处理的输入见 [`custom_patches/README.md`](custom_patches/README.md) |
+| `disable_werror` | `false` | 关闭 `CONFIG_WERROR`（`-Werror`） | 只有当编译器警告导致构建失败时才开 |
 | `droidspaces` | `off` | Droidspaces 容器支持 | 不玩容器保持 `off`。5.10–6.6 选 `678` / `123` / `345`，不同设备可能要换槽位试；6.12 / 6.18 任一非 `off` 值都表示开启 |
 | `droidspaces_ntsync` | `false` | 给 Droidspaces 加 NTSync | 必须先开 Droidspaces。支持 Android 12/5.10、13/5.15、14/6.1、15/6.6、16/6.12；Android 14/5.15 会失败；Android 13/5.10 和 17/6.18 会跳过 |
 | `build_bypass` | `false` | 额外编一个放宽内核模块版本校验的 Image | 会明显增加构建时间；用于诊断模块兼容性，**不是隐藏 root** |
 | `use_nomount` | `false` | NoMount 挂载支持 | 还需要单独安装配套的 [NoMount 模块](https://github.com/maxsteeel/nomount)；clean build 跳过 |
 | `supp_op` | `false` | 一加 8E（OnePlus 8E）支持 | 主工作流和自定义工作流都有这个开关；6.18 自动跳过 |
 
-> **Android 17 / 6.18 会自动跳过：** SUSFS、ZRAM/LZ4KD、NTSync、Re-Kernel、一加 8E 和 CVE-2026-43499 修复链。BBG 和 Droidspaces 仍可用。构建日志开头的“构建信息摘要”会列出实际启用的功能。
+> **Android 17 / 6.18 会自动跳过：** SUSFS、ZRAM/LZ4KD、NTSync、Re-Kernel 和一加 8E。BBG 和 Droidspaces 仍可用；`custom_patches/` 里的补丁默认不应用，启用后按版本范围自动跳过不适用项。构建日志开头的“构建信息摘要”会列出实际启用的功能。
 
 > **Android 16 / 6.12 的 ZRAM：** 通过 `build_target` 构建 6.12 时，ZRAM 会被强制关闭；6.18 自动跳过。6.12 建议保持关闭。
 

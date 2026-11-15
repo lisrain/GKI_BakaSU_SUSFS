@@ -234,14 +234,15 @@ If the phone does not boot, restore the boot image you backed up and do not keep
 | `use_zram` | `false` | Enhanced ZRAM / LZ4KD algorithms | Enable only if you want the ZRAM enhancements. When building 6.12 via `build_target` it is forced off; 6.18 skips it. |
 | `use_bbg` | `false` | BBG anti-brick patch | Enable only if needed; not every device requires it. |
 | `use_rekernel` | `false` | Experimental Re-Kernel drivers | Usually unnecessary; 6.18 skips it. |
-| `cve_2026_43499_patch` | `true` | Applies the CVE-2026-43499 fix series | Recommended to keep on; 6.18 skips it. |
+| `apply_custom_patches` | `false` | Applies the custom patches in `custom_patches/` | Patches run in filename order and out-of-range versions are skipped automatically; see [`custom_patches/README.md`](custom_patches/README.md) for the selection and failure-handling inputs. |
+| `disable_werror` | `false` | Disables `CONFIG_WERROR` (`-Werror`) | Enable only when compiler warnings fail the build. |
 | `droidspaces` | `off` | Droidspaces container support | Leave `off` unless you use containers. For 5.10–6.6 choose `678` / `123` / `345`; different devices may need different slots. For 6.12 / 6.18 any non-`off` value enables it. |
 | `droidspaces_ntsync` | `false` | Adds NTSync to Droidspaces | Requires Droidspaces to be enabled. Supported: Android 12/5.10, 13/5.15, 14/6.1, 15/6.6, 16/6.12. Android 14/5.15 fails; Android 13/5.10 and 17/6.18 skip it. |
 | `build_bypass` | `false` | Builds an extra Image with relaxed kernel module version checks | Significantly increases build time. It is for diagnosing module compatibility, **not for hiding root**. |
 | `use_nomount` | `false` | NoMount mount support | Also requires the separate [NoMount module](https://github.com/maxsteeel/nomount). Clean builds skip it. |
 | `supp_op` | `false` | OnePlus 8E support | Both the main and custom workflows expose it; 6.18 skips it. |
 
-> **Android 17 / 6.18 automatically skips:** SUSFS, ZRAM/LZ4KD, NTSync, Re-Kernel, OnePlus 8E, and the CVE-2026-43499 fix series. BBG and Droidspaces remain available. The "build information summary" at the start of each build log lists the features that are actually enabled.
+> **Android 17 / 6.18 automatically skips:** SUSFS, ZRAM/LZ4KD, NTSync, Re-Kernel, and OnePlus 8E. BBG and Droidspaces remain available. Patches in `custom_patches/` are not applied by default; when enabled, out-of-range versions are skipped automatically. The "build information summary" at the start of each build log lists the features that are actually enabled.
 
 > **Android 16 / 6.12 and ZRAM:** when building 6.12 via `build_target`, ZRAM is forced off; 6.18 skips it. Keeping it off is recommended for 6.12.
 
