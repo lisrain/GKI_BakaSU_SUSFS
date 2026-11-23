@@ -1,7 +1,7 @@
 {
   "android_version": "android13",
   "kernel_version": "5.15",
-  "lts": "5.15.223",
+  "lts": "5.15.225",
   "entries": [
     {
       "date": "2022-06",
@@ -171,27 +171,27 @@
     {
       "date": "2025-09",
       "kernel": "5.15.189",
-      "revision": "r14"
+      "revision": "r15"
     },
     {
       "date": "2025-12",
       "kernel": "5.15.194",
-      "revision": "r11"
+      "revision": "r13"
     },
     {
       "date": "2026-03",
       "kernel": "5.15.197",
-      "revision": "r18"
+      "revision": "r19"
     },
     {
       "date": "2026-06",
       "kernel": "5.15.206",
-      "revision": "r6"
+      "revision": "r7"
     },
     {
       "date": "2026-09",
       "kernel": "5.15.211",
-      "revision": "r4"
+      "revision": "r6"
     }
   ]
 }
